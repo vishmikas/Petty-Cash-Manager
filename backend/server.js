@@ -69,8 +69,7 @@ const connectDB = async (retries = 5) => {
 connectDB();
 
 
-
-
+app.use(require('./middleware/errorHandler'));
 
 
 app.get(`/api/health`, (req, res) => {
