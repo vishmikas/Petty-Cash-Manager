@@ -30,3 +30,4 @@ const DepartmentSchema = new mongoose.Schema({
 
 DepartmentSchema.index({ name: 1 });
 
+module.exports = mongoose.model('Department', DepartmentSchema);
