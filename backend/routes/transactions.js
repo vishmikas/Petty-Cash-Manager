@@ -217,4 +217,75 @@ router.post('/allocate', protect, authorize('admin'), async (req, res) => {
   }
 });
 
+
+router.post('/expense', protect, async (req, res) => {
+  try {
+    const { description, amount, category, date, notes } = req.body;
+
+    if (!description || !amount) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please provide description and amount'
+      });
+    }
+
+    if (amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Amount must be greater than 0'
+      });
+    }
+
+    if (req.user.pettyCashBalance < amount) {
+      return res.status(400).json({
+        success: false,
+        error: `Insufficient balance. Available: Rs. ${req.user.pettyCashBalance}`
+      });
+    }
+
+    if (!req.user.department) {
+      return res.status(400).json({
+        success: false,
+        error: 'You must be assigned to a department'
+      });
+    }
+
+    if (date && new Date(date) > new Date()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Date cannot be in the future'
+      });
+    }
+
+    const expense = await Transaction.create({
+      description,
+      amount: Number(amount),
+      category: category || 'General',
+      type: 'EXPENSE',
+      date: date || Date.now(),
+      notes,
+      createdBy: req.user._id,
+      employee: req.user._id,
+      department: req.user.department._id || req.user.department,
+      approvalStatus: 'pending'
+    });
+
+    const populatedExpense = await Transaction.findById(expense._id)
+      .populate('createdBy', 'name email')
+      .populate('employee', 'name email pettyCashBalance')
+      .populate('department', 'name');
+
+    return res.status(201).json({
+      success: true,
+      data: populatedExpense
+    });
+  } catch (err) {
+    console.error('Create expense error:', err);
+    return res.status(500).json({
+      success: false,
+      error: err.message || 'Server Error'
+    });
+  }
+});
+
 module.exports = router;
