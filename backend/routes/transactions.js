@@ -76,4 +76,79 @@ router.get('/pending', protect, authorize('manager', 'admin'),
   }
 );
 
+
+router.get('/analytics', protect, async (req, res) => {
+  try {
+    const { startDate, endDate, employee, department } = req.query;
+
+    let filter = {};
+
+    if (startDate || endDate) {
+      filter.date = {};
+      if (startDate) filter.date.$gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        filter.date.$lte = end;
+      }
+    }
+
+    if (req.user.role === 'employee') {
+      filter.employee = req.user._id;
+    } else if (req.user.role === 'manager' && req.user.department) {
+      filter.department = req.user.department;
+    }
+
+    if (employee && ['admin', 'accountant', 'manager']
+      .includes(req.user.role)) {
+      filter.employee = employee;
+    }
+    if (department && ['admin', 'accountant']
+      .includes(req.user.role)) {
+      filter.department = department;
+    }
+
+    const transactions = await Transaction.find(filter);
+
+    const totalAllocated = transactions
+      .filter(t => t.type === 'ALLOCATION' && t.approvalStatus === 'approved')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const totalExpense = transactions
+      .filter(t => t.type === 'EXPENSE' && t.approvalStatus === 'approved')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const pendingExpenses = transactions
+      .filter(t => t.type === 'EXPENSE' && t.approvalStatus === 'pending')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const expenseByCategory = transactions
+      .filter(t => t.type === 'EXPENSE' && t.approvalStatus === 'approved')
+      .reduce((acc, t) => {
+        acc[t.category] = (acc[t.category] || 0) + t.amount;
+        return acc;
+      }, {});
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalAllocated,
+          totalExpense,
+          balance: totalAllocated - totalExpense,
+          pendingExpenses,
+          transactionCount: transactions.length
+        },
+        expenseByCategory
+      }
+    });
+  } catch (err) {
+    console.error('Analytics error:', err);
+    return res.status(500).json({
+      success: false,
+      error: 'Server Error'
+    });
+  }
+});
+
 module.exports = router;
