@@ -357,4 +357,66 @@ router.get('/', protect, async (req, res) => {
   }
 });
 
+// ─────────────────────────────────────────────
+// DYNAMIC /:id ROUTES LAST
+// ─────────────────────────────────────────────
+
+
+router.put('/:id', protect, validateObjectId, async (req, res) => {
+  try {
+    const transaction = await Transaction.findById(req.params.id);
+
+    if (!transaction) {
+      return res.status(404).json({
+        success: false,
+        error: 'Transaction not found'
+      });
+    }
+
+    const isOwner = transaction.createdBy.toString() ===
+      req.user._id.toString();
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        error: 'Not authorized to update this transaction'
+      });
+    }
+
+    if (transaction.approvalStatus === 'approved' && !isAdmin) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot edit an approved transaction'
+      });
+    }
+
+    const { description, amount, category, date, notes } = req.body;
+    if (description) transaction.description = description;
+    if (amount) transaction.amount = Number(amount);
+    if (category) transaction.category = category;
+    if (date) transaction.date = date;
+    if (notes !== undefined) transaction.notes = notes;
+
+    await transaction.save();
+
+    const updatedTransaction = await Transaction.findById(transaction._id)
+      .populate('createdBy', 'name email')
+      .populate('employee', 'name email pettyCashBalance')
+      .populate('department', 'name')
+      .populate('approvedBy', 'name email');
+
+    return res.status(200).json({
+      success: true,
+      data: updatedTransaction
+    });
+  } catch (err) {
+    console.error('Update transaction error:', err);
+    return res.status(500).json({
+      success: false,
+      error: 'Server Error'
+    });
+  }
+});
+
 module.exports = router;
