@@ -288,4 +288,73 @@ router.post('/expense', protect, async (req, res) => {
   }
 });
 
+// ─────────────────────────────────────────────
+// GENERAL ROUTES
+// ─────────────────────────────────────────────
+
+
+router.get('/', protect, async (req, res) => {
+  try {
+    const {
+      startDate, endDate, type,
+      category, search, approvalStatus,
+      department, employee
+    } = req.query;
+
+    let query = {};
+
+    if (req.user.role === 'employee') {
+      query.employee = req.user._id;
+    }
+    else if (req.user.role === 'manager') {
+      if (req.user.department) {
+        query.department = req.user.department._id || req.user.department;
+      }
+    }
+
+    if (startDate || endDate) {
+      query.date = {};
+      if (startDate) query.date.$gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        query.date.$lte = end;
+      }
+    }
+
+    if (type) query.type = type;
+    if (category) query.category = category;
+    if (search) query.description = { $regex: search, $options: 'i' };
+    if (approvalStatus) query.approvalStatus = approvalStatus;
+
+    if (department && ['admin', 'accountant'].includes(req.user.role)) {
+      query.department = department;
+    }
+
+    if (employee && ['admin', 'accountant', 'manager']
+      .includes(req.user.role)) {
+      query.employee = employee;
+    }
+
+    const transactions = await Transaction.find(query)
+      .sort({ date: -1 })
+      .populate('createdBy', 'name email')
+      .populate('employee', 'name email pettyCashBalance')
+      .populate('department', 'name')
+      .populate('approvedBy', 'name email');
+
+    return res.status(200).json({
+      success: true,
+      count: transactions.length,
+      data: transactions
+    });
+  } catch (err) {
+    console.error('Get transactions error:', err);
+    return res.status(500).json({
+      success: false,
+      error: 'Server Error'
+    });
+  }
+});
+
 module.exports = router;
