@@ -556,4 +556,50 @@ router.put('/:id/reject', protect, authorize('manager', 'admin'),
   }
 );
 
+
+router.delete('/:id', protect, validateObjectId, async (req, res) => {
+  try {
+    const transaction = await Transaction.findById(req.params.id);
+
+    if (!transaction) {
+      return res.status(404).json({
+        success: false,
+        error: 'Transaction not found'
+      });
+    }
+
+    const isOwner = transaction.createdBy.toString() ===
+      req.user._id.toString();
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        error: 'Not authorized to delete this transaction'
+      });
+    }
+
+    if (transaction.approvalStatus === 'approved' && !isAdmin) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot delete an approved transaction'
+      });
+    }
+
+    await transaction.deleteOne();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Transaction deleted successfully',
+      data: {}
+    });
+  } catch (err) {
+    console.error('Delete transaction error:', err);
+    return res.status(500).json({
+      success: false,
+      error: 'Server Error'
+    });
+  }
+});
+
 module.exports = router;
