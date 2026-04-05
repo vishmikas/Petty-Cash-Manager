@@ -151,4 +151,70 @@ router.get('/analytics', protect, async (req, res) => {
   }
 });
 
+// ─────────────────────────────────────────────
+// ACTION ROUTES
+// ─────────────────────────────────────────────
+
+router.post('/allocate', protect, authorize('admin'), async (req, res) => {
+  try {
+    const { employee, amount, notes } = req.body;
+
+    if (!employee || !amount || amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please provide employee and valid amount'
+      });
+    }
+
+    const employeeUser = await User.findById(employee)
+      .populate('department');
+
+    if (!employeeUser) {
+      return res.status(404).json({
+        success: false,
+        error: 'Employee not found'
+      });
+    }
+
+    if (!employeeUser.department) {
+      return res.status(400).json({
+        success: false,
+        error: 'Employee must be assigned to a department first'
+      });
+    }
+
+    const allocation = await Transaction.create({
+      description: `Petty Cash Allocation to ${employeeUser.name}`,
+      amount: Number(amount),
+      category: 'Petty Cash Allocation',
+      type: 'ALLOCATION',
+      date: Date.now(),
+      notes: notes || '',
+      createdBy: req.user._id,
+      employee: employee,
+      department: employeeUser.department._id,
+      approvalStatus: 'approved'
+    });
+
+    employeeUser.pettyCashBalance += Number(amount);
+    await employeeUser.save();
+
+    const populatedAllocation = await Transaction.findById(allocation._id)
+      .populate('createdBy', 'name email')
+      .populate('employee', 'name email pettyCashBalance')
+      .populate('department', 'name');
+
+    return res.status(201).json({
+      success: true,
+      data: populatedAllocation
+    });
+  } catch (err) {
+    console.error('Allocation error:', err);
+    return res.status(500).json({
+      success: false,
+      error: err.message || 'Server Error'
+    });
+  }
+});
+
 module.exports = router;
