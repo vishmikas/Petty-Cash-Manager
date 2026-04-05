@@ -60,10 +60,8 @@ const TransactionSchema = new mongoose.Schema({
     },
     approvalStatus: {
         type: String,
-        enum: ['PENDING', 'APPROVED', 'REJECTED'],
-        default: function() {
-            return this.type === 'ALLOCATION' ? 'APPROVED' : 'PENDING';
-        }
+        enum: ['pending', 'approved', 'rejected'],
+        default: 'pending'
     },
     approvedBy: {
         type: mongoose.Schema.Types.ObjectId,
