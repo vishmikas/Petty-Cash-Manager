@@ -60,7 +60,6 @@ UserSchema.methods.matchPassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
 };
 
-UserSchema.index({ email: 1 });
 UserSchema.index({ department: 1 });
 UserSchema.index({ role: 1 });
 
