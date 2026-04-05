@@ -419,4 +419,141 @@ router.put('/:id', protect, validateObjectId, async (req, res) => {
   }
 });
 
+// @route   PUT /api/transactions/:id/approve
+// @desc    Approve an expense
+// @access  Private (Manager, Admin)
+router.put('/:id/approve', protect, authorize('manager', 'admin'),
+  validateObjectId, async (req, res) => {
+    try {
+      const transaction = await Transaction
+        .findById(req.params.id)
+        .populate('employee');
+
+      if (!transaction) {
+        return res.status(404).json({
+          success: false,
+          error: 'Transaction not found'
+        });
+      }
+
+      if (transaction.type !== 'EXPENSE') {
+        return res.status(400).json({
+          success: false,
+          error: 'Only expenses can be approved'
+        });
+      }
+
+      if (transaction.approvalStatus !== 'pending') {
+        return res.status(400).json({
+          success: false,
+          error: 'Transaction has already been processed'
+        });
+      }
+
+      // Manager can only approve their own department
+      if (req.user.role === 'manager') {
+        const userDept = req.user.department._id || req.user.department;
+        if (!transaction.department.equals(userDept)) {
+          return res.status(403).json({
+            success: false,
+            error: 'Not authorized to approve this transaction'
+          });
+        }
+      }
+
+      // Mark as approved
+      transaction.approvalStatus = 'approved';
+      transaction.approvedBy = req.user._id;
+      transaction.approvedAt = Date.now();
+      await transaction.save();
+
+      // Deduct from employee balance only on approval
+      const employee = await User.findById(transaction.employee._id);
+      employee.pettyCashBalance -= transaction.amount;
+      await employee.save();
+
+      const updatedTransaction = await Transaction.findById(transaction._id)
+        .populate('createdBy', 'name email')
+        .populate('employee', 'name email pettyCashBalance')
+        .populate('department', 'name')
+        .populate('approvedBy', 'name email');
+
+      return res.status(200).json({
+        success: true,
+        data: updatedTransaction
+      });
+    } catch (err) {
+      console.error('Approve error:', err);
+      return res.status(500).json({
+        success: false,
+        error: 'Server Error'
+      });
+    }
+  }
+);
+
+
+router.put('/:id/reject', protect, authorize('manager', 'admin'),
+  validateObjectId, async (req, res) => {
+    try {
+      const { reason } = req.body;
+      const transaction = await Transaction.findById(req.params.id);
+
+      if (!transaction) {
+        return res.status(404).json({
+          success: false,
+          error: 'Transaction not found'
+        });
+      }
+
+      if (transaction.type !== 'EXPENSE') {
+        return res.status(400).json({
+          success: false,
+          error: 'Only expenses can be rejected'
+        });
+      }
+
+      if (transaction.approvalStatus !== 'pending') {
+        return res.status(400).json({
+          success: false,
+          error: 'Transaction has already been processed'
+        });
+      }
+
+      if (req.user.role === 'manager') {
+        const userDept = req.user.department._id || req.user.department;
+        if (!transaction.department.equals(userDept)) {
+          return res.status(403).json({
+            success: false,
+            error: 'Not authorized to reject this transaction'
+          });
+        }
+      }
+
+      transaction.approvalStatus = 'rejected';
+      transaction.approvedBy = req.user._id;
+      transaction.approvedAt = Date.now();
+      transaction.rejectionReason = reason || 'No reason provided';
+      await transaction.save();
+
+      const updatedTransaction = await Transaction.findById(transaction._id)
+        .populate('createdBy', 'name email')
+        .populate('employee', 'name email pettyCashBalance')
+        .populate('department', 'name')
+        .populate('approvedBy', 'name email');
+
+      return res.status(200).json({
+        success: true,
+        data: updatedTransaction
+      });
+    } catch (err) {
+      console.error('Reject error:', err);
+      return res.status(500).json({
+        success: false,
+        error: 'Server Error'
+      });
+    }
+  }
+);
+
 module.exports = router;
