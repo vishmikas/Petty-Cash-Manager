@@ -105,7 +105,6 @@ export default function EmployeeExpenseForm({
     setEditingTransaction(null);
   };
 
-  // How much will be left after this expense
   const remainingBalance = currentBalance - (Number(formData.amount) || 0);
 
   return (
