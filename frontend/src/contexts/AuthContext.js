@@ -35,12 +35,12 @@ export const AuthProvider = ({ children }) => {
 
   // LOAD USER ON APP START
   useEffect(() => {
-    if (token) {
-      loadUser();
-    } else {
-      setLoading(false);
-    }
-  }, [token]);
+  if (token) {
+    loadUser();
+  } else {
+    setLoading(false);
+  }
+}, [token]);
 
   const loadUser = async () => {
     try {

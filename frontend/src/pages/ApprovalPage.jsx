@@ -19,7 +19,7 @@ import {
 import { formatCurrency, formatDate } from '../utils/helpers';
 
 export default function ApprovalPage() {
-  const { user } = useAuth();
+  const { } = useAuth();
 
   
   // STATE
