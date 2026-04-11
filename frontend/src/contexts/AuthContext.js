@@ -1,13 +1,14 @@
-import React, { 
-  createContext, 
-  useState, 
-  useContext, 
-  useEffect 
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  useCallback
 } from 'react';
-import { 
-  login as apiLogin, 
-  register as apiRegister, 
-  getCurrentUser 
+import {
+  login as apiLogin,
+  register as apiRegister,
+  getCurrentUser
 } from '../services/api';
 
 // CREATE CONTEXT
@@ -18,31 +19,28 @@ export const useAuth = () => {
   const context = useContext(AuthContext);
 
   if (!context) {
-    throw new Error(
-      'useAuth must be used within an AuthProvider'
-    );
+    throw new Error('useAuth must be used within an AuthProvider');
   }
+
   return context;
 };
 
 // AUTH PROVIDER COMPONENT
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(
-    localStorage.getItem('token')
-  );
+  const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
 
-  // LOAD USER ON APP START
-  useEffect(() => {
-  if (token) {
-    loadUser();
-  } else {
+  // LOGOUT
+  const logout = useCallback(() => {
+    localStorage.removeItem('token');
+    setToken(null);
+    setUser(null);
     setLoading(false);
-  }
-}, [token]);
+  }, []);
 
-  const loadUser = async () => {
+  // LOAD USER ON APP START
+  const loadUser = useCallback(async () => {
     try {
       const response = await getCurrentUser();
       setUser(response.data.data);
@@ -52,7 +50,15 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [logout]);
+
+  useEffect(() => {
+    if (token) {
+      loadUser();
+    } else {
+      setLoading(false);
+    }
+  }, [token, loadUser]);
 
   // LOGIN
   const login = async (email, password) => {
@@ -78,26 +84,19 @@ export const AuthProvider = ({ children }) => {
     return response;
   };
 
-  // LOGOUT
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
-  };
-
   // UPDATE USER
   const updateUser = (updatedUser) => {
     setUser(updatedUser);
   };
 
   const value = {
-    user,           
-    token,          
-    loading,        
-    login,          
-    register,       
-    logout,         
-    updateUser,     
+    user,
+    token,
+    loading,
+    login,
+    register,
+    logout,
+    updateUser,
     isAuthenticated: !!token && !!user
   };
 
