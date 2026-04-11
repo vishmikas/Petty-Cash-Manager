@@ -54,7 +54,7 @@ export default function Login() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-slate-800">
-              Petty Cash
+              PETTY CASH
             </h1>
             <p className="text-sm text-slate-500">
               Management System
