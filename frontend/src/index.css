@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 body {
   margin: 0;
@@ -11,6 +13,7 @@ body {
   color: rgb(15 23 42);
 }
 
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -29,6 +32,7 @@ body {
   background-color: rgb(100 116 139); 
 }
 
+/* Animations */
 @keyframes slideDown {
   from {
     transform: translateY(-20px);
