@@ -28,7 +28,6 @@ A full-stack, multi-user **Petty Cash Management System** with role-based access
 - Rate limiting (100 req / 15 min per IP) via **express-rate-limit**
 - NoSQL injection protection via **express-mongo-sanitize**
 - HTTP security headers via **Helmet**
-- Graceful shutdown with SIGTERM / SIGINT handling
 
 ---
 
