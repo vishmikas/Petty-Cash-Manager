@@ -173,8 +173,4 @@ Screenshots from manual testing are available in the [`Testing_Results/`](./Test
 
 **Dilum Samarathunga**
 
----
 
-## 📄 License
-
-This project is licensed under the **ISC License**.
