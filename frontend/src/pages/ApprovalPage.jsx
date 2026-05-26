@@ -126,15 +126,15 @@ export default function ApprovalPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto p-4 md:p-8">
+      <div className="page-container">
         <header className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
+              <h1 className="page-title flex items-center gap-3">
                 <Clock className="text-orange-500" />
                 Pending Approvals
               </h1>
-              <p className="text-slate-500 text-sm mt-1">
+              <p className="page-subtitle">
                 Review and approve or reject employee expenses
               </p>
             </div>
@@ -154,7 +154,7 @@ export default function ApprovalPage() {
             <p className="text-slate-400 mt-4">Loading pending transactions...</p>
           </div>
         ) : pendingTransactions.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-lg p-16 text-center">
+          <div className="glass-card shadow-sm p-16 text-center">
             <div className="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-10 h-10 text-green-500" />
             </div>
@@ -168,7 +168,7 @@ export default function ApprovalPage() {
             {pendingTransactions.map((transaction) => (
               <div
                 key={transaction._id}
-                className="bg-white rounded-xl shadow-lg border border-slate-200 p-6 hover:shadow-xl transition-all"
+                className="glass-card shadow-sm border border-slate-200 p-6 hover:shadow-xl transition-all"
               >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex-1">

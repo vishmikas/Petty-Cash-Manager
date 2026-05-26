@@ -1,228 +1,120 @@
 import React from 'react';
-import {
-  Trash2,
-  Edit2,
-  ArrowUpRight,
-  ArrowDownLeft,
-  StickyNote,
-  User,
-  Building2
-} from 'lucide-react';
-import { formatCurrency, formatDate, getStatusColor } from '../utils/helpers';
+import { Edit, Trash2, FileText, CheckCircle2, Clock3, XCircle, ExternalLink } from 'lucide-react';
+import { Badge, Button, Card, EmptyState } from './ui';
+import { formatCurrency, formatDate, truncateText, capitalize } from '../utils/helpers';
 
+const statusVariant = (status) => {
+  if (status === 'approved') return 'success';
+  if (status === 'pending') return 'warning';
+  if (status === 'rejected') return 'destructive';
+  return 'muted';
+};
 
-export default function TransactionTable({
-  transactions,
-  onDelete,
-  onEdit,
-  userRole,
-  userId
-}) {
+const statusIcon = (status) => {
+  if (status === 'approved') return <CheckCircle2 className="h-3.5 w-3.5" />;
+  if (status === 'pending') return <Clock3 className="h-3.5 w-3.5" />;
+  if (status === 'rejected') return <XCircle className="h-3.5 w-3.5" />;
+  return null;
+};
 
+export default function TransactionTable({ transactions = [], onEdit, onDelete, userRole, userId }) {
   const canEdit = (transaction) => {
-    if (userRole === 'admin') return true;
-    if (userRole === 'accountant') return false;
-    if (transaction.approvalStatus === 'approved') return false;
-    return transaction.createdBy?._id === userId;
+    if (!onEdit) return false;
+    if (userRole === 'admin') return transaction.approvalStatus !== 'approved';
+    if (userRole === 'employee') {
+      return transaction.employee?._id === userId && ['pending', 'rejected'].includes(transaction.approvalStatus);
+    }
+    return false;
   };
 
   const canDelete = (transaction) => {
+    if (!onDelete) return false;
     if (userRole === 'admin') return true;
-    if (userRole === 'accountant') return false;
-    if (transaction.approvalStatus === 'approved') return false;
-    return transaction.createdBy?._id === userId;
+    if (userRole === 'employee') {
+      return transaction.employee?._id === userId && ['pending', 'rejected'].includes(transaction.approvalStatus);
+    }
+    return false;
   };
 
-  return (
-    <div className="bg-white rounded-xl shadow-lg
-      border border-slate-200 overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+  if (!transactions.length) {
+    return (
+      <EmptyState
+        icon={FileText}
+        title="No transactions found"
+        description="Try changing your filters, or create a new petty cash transaction."
+      />
+    );
+  }
 
-          {/* Table Header */}
-          <thead className="bg-gradient-to-r from-slate-50
-            to-slate-100 border-b-2 border-slate-200">
+  return (
+    <Card className="overflow-hidden bg-white/90 shadow-sm">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[900px] text-sm">
+          <thead className="table-head">
             <tr>
-              <th className="p-4 text-sm font-semibold
-                text-slate-700">Date</th>
-              <th className="p-4 text-sm font-semibold
-                text-slate-700">Type</th>
-              <th className="p-4 text-sm font-semibold
-                text-slate-700">Description</th>
-              <th className="p-4 text-sm font-semibold
-                text-slate-700">Category</th>
-              <th className="p-4 text-sm font-semibold
-                text-slate-700">Employee</th>
-              <th className="p-4 text-sm font-semibold
-                text-slate-700">Department</th>
-              <th className="p-4 text-sm font-semibold
-                text-slate-700">Status</th>
-              <th className="p-4 text-sm font-semibold
-                text-slate-700 text-right">Amount</th>
-              <th className="p-4 text-sm font-semibold
-                text-slate-700 text-right">Actions</th>
+              <th className="px-4 py-3 text-left font-semibold">Ref</th>
+              <th className="px-4 py-3 text-left font-semibold">Date</th>
+              <th className="px-4 py-3 text-left font-semibold">Description</th>
+              <th className="px-4 py-3 text-left font-semibold">Employee</th>
+              <th className="px-4 py-3 text-left font-semibold">Category</th>
+              <th className="px-4 py-3 text-left font-semibold">Type</th>
+              <th className="px-4 py-3 text-right font-semibold">Amount</th>
+              <th className="px-4 py-3 text-center font-semibold">Status</th>
+              <th className="px-4 py-3 text-right font-semibold">Actions</th>
             </tr>
           </thead>
-
-          <tbody>
-            {transactions.length === 0 ? (
-              <tr>
-                <td colSpan="9" className="p-12 text-center">
-                  <div className="text-slate-400">
-                    <p className="text-lg font-medium mb-2">
-                      No transactions found
-                    </p>
-                    <p className="text-sm">
-                      Add your first transaction to get started
-                    </p>
+          <tbody className="divide-y divide-border">
+            {transactions.map((transaction) => (
+              <tr key={transaction._id} className="transition-colors hover:bg-muted/40">
+                <td className="whitespace-nowrap px-4 py-4 font-medium text-muted-foreground">{transaction.referenceNumber || '-'}</td>
+                <td className="whitespace-nowrap px-4 py-4 text-muted-foreground">{formatDate(transaction.date)}</td>
+                <td className="px-4 py-4">
+                  <div className="font-medium text-foreground">{truncateText(transaction.description, 48)}</div>
+                  {transaction.notes && <div className="mt-1 text-xs text-muted-foreground">{truncateText(transaction.notes, 60)}</div>}
+                  {transaction.receiptUrl && (
+                    <a className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline" href={transaction.receiptUrl} target="_blank" rel="noreferrer">
+                      Receipt <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                </td>
+                <td className="px-4 py-4">
+                  <div className="font-medium text-foreground">{transaction.employee?.name || 'N/A'}</div>
+                  <div className="text-xs text-muted-foreground">{transaction.employee?.department?.name || transaction.department?.name || ''}</div>
+                </td>
+                <td className="px-4 py-4 text-muted-foreground">{transaction.category || '-'}</td>
+                <td className="px-4 py-4">
+                  <Badge variant={transaction.type === 'ALLOCATION' ? 'success' : 'secondary'}>{transaction.type}</Badge>
+                </td>
+                <td className={`whitespace-nowrap px-4 py-4 text-right font-semibold ${transaction.type === 'EXPENSE' ? 'text-rose-600' : 'text-emerald-600'}`}>
+                  {transaction.type === 'EXPENSE' ? '-' : '+'}{formatCurrency(transaction.amount)}
+                </td>
+                <td className="px-4 py-4 text-center">
+                  <Badge variant={statusVariant(transaction.approvalStatus)} className="gap-1 capitalize">
+                    {statusIcon(transaction.approvalStatus)}
+                    {capitalize(transaction.approvalStatus)}
+                  </Badge>
+                </td>
+                <td className="px-4 py-4">
+                  <div className="flex justify-end gap-2">
+                    {canEdit(transaction) && (
+                      <Button variant="outline" size="sm" onClick={() => onEdit(transaction)}>
+                        <Edit className="h-3.5 w-3.5" />
+                        Edit
+                      </Button>
+                    )}
+                    {canDelete(transaction) && (
+                      <Button variant="destructive" size="sm" onClick={() => onDelete(transaction._id)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </Button>
+                    )}
                   </div>
                 </td>
               </tr>
-            ) : (
-              transactions.map((t) => (
-                <tr
-                  key={t._id}
-                  className="border-b border-slate-100
-                    hover:bg-slate-50 transition-colors group"
-                >
-                  {/* Date */}
-                  <td className="p-4 text-slate-600 font-medium
-                    whitespace-nowrap">
-                    {formatDate(t.date)}
-                  </td>
-
-                  <td className="p-4">
-                    <span className={`inline-flex items-center
-                      gap-1 px-2.5 py-1 text-xs font-semibold
-                      rounded-full ${
-                      t.type === 'ALLOCATION'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-rose-100 text-rose-700'
-                    }`}>
-                      {t.type === 'ALLOCATION' ? (
-                        <>
-                          <ArrowUpRight size={12} />
-                          Allocation
-                        </>
-                      ) : (
-                        <>
-                          <ArrowDownLeft size={12} />
-                          Expense
-                        </>
-                      )}
-                    </span>
-                  </td>
-
-                  <td className="p-4">
-                    <div className="flex flex-col">
-                      <span className="font-medium text-slate-800">
-                        {t.description}
-                      </span>
-                      {t.notes && (
-                        <span className="text-xs text-slate-500
-                          flex items-center gap-1 mt-1">
-                          <StickyNote size={12} />
-                          {t.notes.substring(0, 50)}
-                          {t.notes.length > 50 ? '...' : ''}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-
-                  <td className="p-4">
-                    <span className="px-2.5 py-1 text-xs
-                      font-medium rounded-full bg-blue-50
-                      text-blue-700 border border-blue-200
-                      whitespace-nowrap">
-                      {t.category || 'General'}
-                    </span>
-                  </td>
-
-                  <td className="p-4">
-                    <div className="flex items-center gap-2
-                      text-sm text-slate-600">
-                      <User size={14} />
-                      {t.employee?.name || 'Unknown'}
-                    </div>
-                  </td>
-
-                  <td className="p-4">
-                    <div className="flex items-center gap-2
-                      text-sm text-slate-600">
-                      <Building2 size={14} />
-                      {t.department?.name || 'N/A'}
-                    </div>
-                  </td>
-
-                  <td className="p-4">
-                    <span className={`px-2.5 py-1 text-xs
-                      font-semibold rounded-full capitalize
-                      ${getStatusColor(t.approvalStatus)}`}>
-                      {t.approvalStatus}
-                    </span>
-                  </td>
-
-
-                  <td className={`p-4 font-bold text-right
-                    text-lg whitespace-nowrap ${
-                    t.type === 'ALLOCATION'
-                      ? 'text-emerald-600'
-                      : 'text-rose-600'
-                  }`}>
-                    {formatCurrency(t.amount)}
-                  </td>
-
-                  {/* Actions */}
-                  <td className="p-4 text-right">
-                    <div className="flex gap-2 justify-end
-                      opacity-0 group-hover:opacity-100
-                      transition-opacity">
-                      {canEdit(t) && (
-                        <button
-                          onClick={() => onEdit(t)}
-                          className="text-blue-500
-                            hover:text-blue-700
-                            hover:bg-blue-50 p-2
-                            rounded-lg transition-all"
-                          title="Edit transaction"
-                        >
-                          <Edit2 size={16} />
-                        </button>
-                      )}
-                      {canDelete(t) && (
-                        <button
-                          onClick={() => onDelete(t._id)}
-                          className="text-rose-500
-                            hover:text-rose-700
-                            hover:bg-rose-50 p-2
-                            rounded-lg transition-all"
-                          title="Delete transaction"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
+            ))}
           </tbody>
         </table>
       </div>
-
-      {transactions.length > 0 && (
-        <div className="bg-slate-50 px-4 py-3
-          border-t border-slate-200">
-          <p className="text-sm text-slate-600">
-            Showing{' '}
-            <span className="font-semibold">
-              {transactions.length}
-            </span>{' '}
-            transaction
-            {transactions.length !== 1 ? 's' : ''}
-          </p>
-        </div>
-      )}
-    </div>
+    </Card>
   );
 }

@@ -3,50 +3,14 @@ const router = express.Router();
 const User = require('../models/User');
 const { generateToken } = require('../utils/jwt');
 const { protect } = require('../middleware/auth');
+const { logAudit } = require('../utils/audit');
 
 router.post('/register', async (req, res) => {
-  try {
-    const { name, email, password, role, department } = req.body;
-
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({
-        success: false,
-        error: 'User already exists with this email'
-      });
-    }
-
-
-    const user = await User.create({
-      name,
-      email,
-      password,
-      role: role || 'employee',
-      department
-    });
-
-    const token = generateToken(user._id);
-
-    res.status(201).json({
-      success: true,
-      data: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        department: user.department,
-        token
-      }
-    });
-  } catch (error) {
-    console.error('Register error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Server Error'
-    });
-  }
+  return res.status(403).json({
+    success: false,
+    error: 'Public registration is disabled. Please ask an admin to create the user account.'
+  });
 });
-
 
 router.post('/login', async (req, res) => {
   try {
@@ -64,10 +28,7 @@ router.post('/login', async (req, res) => {
       .populate('department');
 
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid credentials'
-      });
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
     if (!user.isActive) {
@@ -79,13 +40,18 @@ router.post('/login', async (req, res) => {
 
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid credentials'
-      });
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
     const token = generateToken(user._id);
+
+    await logAudit({
+      userId: user._id,
+      action: 'LOGIN',
+      resourceType: 'User',
+      resourceId: user._id,
+      ipAddress: req.ip
+    });
 
     res.status(200).json({
       success: true,
@@ -101,31 +67,19 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server Error'
-    });
+    res.status(500).json({ success: false, error: 'Server Error' });
   }
 });
-
 
 router.get('/me', protect, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).populate('department');
-
-    res.status(200).json({
-      success: true,
-      data: user
-    });
+    res.status(200).json({ success: true, data: user });
   } catch (error) {
     console.error('Get me error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server Error'
-    });
+    res.status(500).json({ success: false, error: 'Server Error' });
   }
 });
-
 
 router.put('/updatepassword', protect, async (req, res) => {
   try {
@@ -146,30 +100,28 @@ router.put('/updatepassword', protect, async (req, res) => {
     }
 
     const user = await User.findById(req.user._id).select('+password');
-
     const isMatch = await user.matchPassword(currentPassword);
     if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        error: 'Current password is incorrect'
-      });
+      return res.status(401).json({ success: false, error: 'Current password is incorrect' });
     }
 
     user.password = newPassword;
     await user.save();
 
-    const token = generateToken(user._id);
-
-    res.status(200).json({
-      success: true,
-      data: { token }
+    await logAudit({
+      userId: req.user._id,
+      action: 'UPDATE',
+      resourceType: 'User',
+      resourceId: req.user._id,
+      changes: { passwordChanged: true },
+      ipAddress: req.ip
     });
+
+    const token = generateToken(user._id);
+    res.status(200).json({ success: true, data: { token } });
   } catch (error) {
     console.error('Update password error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server Error'
-    });
+    res.status(500).json({ success: false, error: 'Server Error' });
   }
 });
 

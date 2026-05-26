@@ -247,21 +247,20 @@ export default function EmployeeDashboard() {
 
   // RENDER
   return (
-    <div className="min-h-screen bg-gradient-to-br
-      from-slate-50 to-slate-100">
+    <div className="app-shell">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto p-4 md:p-8">
+      <div className="page-container">
 
         {/* Header */}
         <header className="flex flex-col md:flex-row
           justify-between items-start md:items-center
           gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800">
+            <h1 className="page-title">
               My Expenses
             </h1>
-            <p className="text-slate-500 text-sm mt-1">
+            <p className="page-subtitle">
               Welcome back, {user?.name}
             </p>
           </div>
@@ -293,10 +292,7 @@ export default function EmployeeDashboard() {
               onClick={handleExport}
               disabled={filteredTransactions.length === 0}
               className="flex items-center gap-2
-                bg-emerald-600 hover:bg-emerald-700
-                text-white px-4 py-2 rounded-lg
-                font-medium shadow-sm transition-all
-                disabled:opacity-50 disabled:cursor-not-allowed"
+                btn-success disabled:cursor-not-allowed"
             >
               <Download size={18} />
               Export
@@ -309,7 +305,7 @@ export default function EmployeeDashboard() {
           gap-6 mb-8">
 
           {/* Available Balance */}
-          <div className={`p-6 rounded-xl shadow-lg text-white ${
+          <div className={`p-6 rounded-xl shadow-sm text-white ${
             currentBalance < 1000
               ? 'bg-gradient-to-r from-red-500 to-red-600'
               : 'bg-gradient-to-r from-blue-500 to-blue-600'
@@ -338,7 +334,7 @@ export default function EmployeeDashboard() {
           </div>
 
           {/* Total Spent */}
-          <div className="bg-white p-6 rounded-xl shadow-lg">
+          <div className="bg-white p-6 rounded-xl shadow-sm">
             <div className="flex items-center
               justify-between mb-4">
               <div className="p-3 bg-red-100 rounded-lg">
@@ -357,7 +353,7 @@ export default function EmployeeDashboard() {
           </div>
 
           {/* Pending Approval */}
-          <div className="bg-white p-6 rounded-xl shadow-lg">
+          <div className="bg-white p-6 rounded-xl shadow-sm">
             <div className="flex items-center
               justify-between mb-4">
               <div className="p-3 bg-yellow-100 rounded-lg">
@@ -407,7 +403,7 @@ export default function EmployeeDashboard() {
               editingTransaction={editingTransaction}
               setEditingTransaction={setEditingTransaction}
               isSubmitting={isSubmitting}
-              currentBalance={currentBalance}
+              currentBalance={Math.max(currentBalance - pendingAmount, 0)}
             />
 
             {/* Transaction Table */}

@@ -13,6 +13,7 @@ import EmployeeDashboard from './pages/Employeedashboard';
 import AccountantDashboard from './pages/AccountantDashboard';
 import ApprovalPage from './pages/ApprovalPage';
 import UsersPage from './pages/UsersPage';
+import DepartmentsPage from './pages/DepartmentsPage';
 
 // DASHBOARD ROUTER
 function DashboardRouter() {
@@ -73,6 +74,15 @@ function App() {
             element={
               <PrivateRoute roles={['admin']}>
                 <UsersPage />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/departments"
+            element={
+              <PrivateRoute roles={['admin']}>
+                <DepartmentsPage />
               </PrivateRoute>
             }
           />

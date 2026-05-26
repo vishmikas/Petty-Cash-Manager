@@ -1,149 +1,51 @@
 import React from 'react';
-import { 
-  Wallet, 
-  TrendingUp, 
-  TrendingDown, 
-  Clock,
-  Activity
-} from 'lucide-react';
-import { formatCurrency, calculatePercentage } from '../utils/helpers';
+import { Wallet, TrendingDown, CheckCircle2, Clock3, XCircle, Activity } from 'lucide-react';
+import { Card, CardContent } from './ui';
+import { formatCurrency } from '../utils/helpers';
 
-const StatCard = ({ 
-  title, 
-  amount, 
-  icon: Icon, 
-  iconBg, 
-  cardBg, 
-  subtitle,
-  isCurrency = true
-}) => (
-  <div className={`${cardBg} p-6 rounded-xl shadow-lg 
-    hover:shadow-xl transition-all duration-300 
-    transform hover:-translate-y-1`}>
-    <div className="flex items-start justify-between">
-      <div className="flex-1">
-        <p className="text-slate-600 text-sm font-medium mb-1">
-          {title}
-        </p>
-        <h3 className="text-2xl font-bold text-slate-800 mb-1">
-          {isCurrency ? formatCurrency(amount) : amount}
-        </h3>
-        {subtitle && (
-          <p className="text-xs text-slate-500">{subtitle}</p>
-        )}
-      </div>
-      <div className={`p-3 rounded-xl ${iconBg} shadow-md`}>
-        <Icon className="w-5 h-5 text-white" />
-      </div>
-    </div>
-  </div>
-);
-
-
-export default function DashboardStats({ analytics }) {
-  if (!analytics) return null;
-
-  const {
-    totalAllocated = 0,
-    totalExpense = 0,
-    balance = 0,
-    pendingExpenses = 0,
-    transactionCount = 0
-  } = analytics.summary || {};
-
-  const spentPercentage = calculatePercentage(
-    totalExpense,
-    totalAllocated
-  );
+const StatCard = ({ title, value, description, icon: Icon, tone = 'default' }) => {
+  const tones = {
+    default: 'bg-blue-50 text-blue-700 ring-blue-600/20',
+    success: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
+    warning: 'bg-amber-50 text-amber-700 ring-amber-600/20',
+    danger: 'bg-rose-50 text-rose-700 ring-rose-600/20',
+    slate: 'bg-slate-50 text-slate-700 ring-slate-600/20'
+  };
 
   return (
-    <div className="mb-8">
-
-      <div className="grid grid-cols-1 md:grid-cols-2 
-        lg:grid-cols-4 gap-6 mb-6">
-
-        <StatCard
-          title="Total Allocated"
-          amount={totalAllocated}
-          icon={TrendingUp}
-          iconBg="bg-gradient-to-br from-blue-500 to-blue-600"
-          cardBg="bg-gradient-to-br from-white to-blue-50"
-          subtitle={`${transactionCount} total transactions`}
-        />
-
-        <StatCard
-          title="Total Expenses"
-          amount={totalExpense}
-          icon={TrendingDown}
-          iconBg="bg-gradient-to-br from-rose-500 to-rose-600"
-          cardBg="bg-gradient-to-br from-white to-rose-50"
-          subtitle="Approved expenses only"
-        />
-
-        <StatCard
-          title="Current Balance"
-          amount={balance}
-          icon={Wallet}
-          iconBg={
-            balance >= 0
-              ? "bg-gradient-to-br from-emerald-500 to-emerald-600"
-              : "bg-gradient-to-br from-red-500 to-red-600"
-          }
-          cardBg="bg-gradient-to-br from-white to-emerald-50"
-          subtitle="Allocated minus expenses"
-        />
-
-        <StatCard
-          title="Pending Approval"
-          amount={pendingExpenses}
-          icon={Clock}
-          iconBg="bg-gradient-to-br from-amber-500 to-amber-600"
-          cardBg="bg-gradient-to-br from-white to-amber-50"
-          subtitle="Awaiting manager review"
-        />
-      </div>
-
-      {totalAllocated > 0 && (
-        <div className="bg-white p-6 rounded-xl shadow-lg 
-          border border-slate-200">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Activity className="w-5 h-5 text-purple-600" />
-            </div>
-            <div className="flex-1">
-              <div className="flex justify-between items-center">
-                <h4 className="font-semibold text-slate-700">
-                  Spending Rate
-                </h4>
-                <span className="text-sm font-bold text-slate-700">
-                  {spentPercentage}% of allocated cash spent
-                </span>
-              </div>
-            </div>
+    <Card className="overflow-hidden bg-white/90 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{value}</p>
+            {description && <p className="mt-1 text-xs text-muted-foreground">{description}</p>}
           </div>
-          <div className="bg-slate-100 rounded-full h-3 
-            overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all 
-                duration-500 ${
-                spentPercentage > 80
-                  ? 'bg-red-500'
-                  : spentPercentage > 50
-                  ? 'bg-yellow-500'
-                  : 'bg-emerald-500'
-              }`}
-              style={{
-                width: `${Math.min(spentPercentage, 100)}%`
-              }}
-            />
-          </div>
-          <div className="flex justify-between text-xs 
-            text-slate-500 mt-2">
-            <span>Rs. 0</span>
-            <span>{formatCurrency(totalAllocated)}</span>
+          <div className={`rounded-xl p-2.5 ring-1 ${tones[tone]}`}>
+            <Icon className="h-5 w-5" />
           </div>
         </div>
-      )}
+      </CardContent>
+    </Card>
+  );
+};
+
+export default function DashboardStats({ analytics }) {
+  const totalAllocated = analytics?.totalAllocated || analytics?.summary?.totalAllocated || 0;
+  const totalSpent = analytics?.totalSpent || analytics?.summary?.totalSpent || 0;
+  const pendingCount = analytics?.pendingCount || analytics?.summary?.pendingCount || 0;
+  const approvedCount = analytics?.approvedCount || analytics?.summary?.approvedCount || 0;
+  const rejectedCount = analytics?.rejectedCount || analytics?.summary?.rejectedCount || 0;
+  const remaining = totalAllocated - totalSpent;
+
+  return (
+    <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
+      <StatCard title="Allocated" value={formatCurrency(totalAllocated)} description="Total petty cash issued" icon={Wallet} tone="default" />
+      <StatCard title="Spent" value={formatCurrency(totalSpent)} description="Approved expenses" icon={TrendingDown} tone="danger" />
+      <StatCard title="Remaining" value={formatCurrency(remaining)} description="Available balance" icon={Activity} tone={remaining >= 0 ? 'success' : 'danger'} />
+      <StatCard title="Pending" value={pendingCount} description="Needs approval" icon={Clock3} tone="warning" />
+      <StatCard title="Approved" value={approvedCount} description="Completed claims" icon={CheckCircle2} tone="success" />
+      <StatCard title="Rejected" value={rejectedCount} description="Declined claims" icon={XCircle} tone="slate" />
     </div>
   );
 }

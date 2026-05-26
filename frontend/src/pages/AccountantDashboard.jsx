@@ -222,11 +222,10 @@ export default function AccountantDashboard() {
 
   // RENDER
   return (
-    <div className="min-h-screen bg-gradient-to-br
-      from-slate-50 to-slate-100">
+    <div className="app-shell">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto p-4 md:p-8">
+      <div className="page-container">
 
         {/* Header */}
         <header className="flex flex-col md:flex-row
@@ -237,7 +236,7 @@ export default function AccountantDashboard() {
               text-slate-800">
               Accountant Dashboard
             </h1>
-            <p className="text-slate-500 text-sm mt-1">
+            <p className="page-subtitle">
               Read-only financial overview and reporting
             </p>
           </div>
@@ -271,10 +270,7 @@ export default function AccountantDashboard() {
               onClick={handleExport}
               disabled={filteredTransactions.length === 0}
               className="flex items-center gap-2
-                bg-emerald-600 hover:bg-emerald-700
-                text-white px-4 py-2 rounded-lg
-                font-medium shadow-sm transition-all
-                disabled:opacity-50
+                btn-success
                 disabled:cursor-not-allowed"
             >
               <Download size={18} />

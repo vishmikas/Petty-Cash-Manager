@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { LogIn, Landmark, Eye, EyeOff } from 'lucide-react';
+import { LogIn, Eye, EyeOff, ShieldCheck, BarChart3, Users } from 'lucide-react';
+import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from '../components/ui';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -23,190 +24,111 @@ export default function Login() {
     }
 
     setLoading(true);
-
     try {
       await login(email, password);
       navigate('/');
     } catch (err) {
-      setError(
-        err.response?.data?.error ||
-        'Login failed. Please try again.'
-      );
+      setError(err.response?.data?.error || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br
-      from-blue-50 via-white to-slate-100
-      flex items-center justify-center p-4">
-
-      <div className="bg-white rounded-2xl shadow-xl
-        w-full max-w-md p-8 border border-slate-100">
-
-        {/* Logo and Title */}
-        <div className="flex items-center justify-center
-          gap-3 mb-8">
-          <div className="bg-blue-600 p-3 rounded-xl
-            shadow-lg">
-            <Landmark className="text-white w-7 h-7" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-800">
-              PETTY CASH
-            </h1>
-            <p className="text-sm text-slate-500">
-              Management System
-            </p>
-          </div>
-        </div>
-
-        {/* Welcome Text */}
-        <div className="text-center mb-6">
-          <h2 className="text-lg font-semibold text-slate-700">
-            Welcome back
-          </h2>
-          <p className="text-sm text-slate-500 mt-1">
-            Sign in to your account to continue
+    <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_10%_10%,rgba(37,99,235,0.16),transparent_30%),linear-gradient(135deg,#f8fafc_0%,#eef2ff_45%,#ffffff_100%)]">
+      <div className="mx-auto grid min-h-screen max-w-6xl items-center gap-10 px-4 py-10 lg:grid-cols-[1.1fr_0.9fr] lg:px-8">
+        <section className="hidden lg:block">
+          <Badge variant="secondary" className="mb-5">Finance workflow dashboard</Badge>
+          <h1 className="max-w-xl text-5xl font-semibold tracking-tight text-slate-950">
+            Manage petty cash with clean approvals and real-time visibility.
+          </h1>
+          <p className="mt-5 max-w-lg text-base leading-7 text-muted-foreground">
+            A modern internal tool for allocations, employee expenses, manager approvals, and accountant reporting.
           </p>
-        </div>
-
-        {/* Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-
-          {/* Email Field */}
-          <div>
-            <label className="block text-sm font-medium
-              text-slate-700 mb-1">
-              Email Address
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 border border-slate-300
-                rounded-lg focus:ring-2 focus:ring-blue-500
-                focus:border-transparent transition-all
-                text-slate-800 placeholder-slate-400"
-              placeholder="your.email@company.com"
-              required
-              autoComplete="email"
-              disabled={loading}
-            />
+          <div className="mt-8 grid max-w-2xl grid-cols-3 gap-3">
+            {[
+              { icon: ShieldCheck, title: 'Role based', desc: 'Admin, manager, accountant, employee' },
+              { icon: BarChart3, title: 'Analytics', desc: 'Track balances and spend' },
+              { icon: Users, title: 'Approvals', desc: 'Review expenses clearly' }
+            ].map(({ icon: Icon, title, desc }) => (
+              <Card key={title} className="bg-white/70 shadow-sm backdrop-blur">
+                <CardContent className="p-4">
+                  <Icon className="mb-3 h-5 w-5 text-primary" />
+                  <p className="text-sm font-semibold">{title}</p>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">{desc}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
+        </section>
 
-          {/* Password Field */}
-          <div>
-            <label className="block text-sm font-medium
-              text-slate-700 mb-1">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-3 border border-slate-300
-                  rounded-lg focus:ring-2 focus:ring-blue-500
-                  focus:border-transparent transition-all
-                  text-slate-800 placeholder-slate-400 pr-12"
-                placeholder="••••••••"
-                required
-                autoComplete="current-password"
-                disabled={loading}
-              />
-              {/* Show/Hide Password Toggle */}
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2
-                  -translate-y-1/2 text-slate-400
-                  hover:text-slate-600 transition-colors"
-              >
-                {showPassword
-                  ? <EyeOff size={18} />
-                  : <Eye size={18} />
-                }
-              </button>
+        <Card className="mx-auto w-full max-w-md border-white/70 bg-white/90 shadow-soft backdrop-blur">
+          <CardHeader className="space-y-4 text-center">
+            <div className="mx-auto inline-flex flex-col items-center gap-1">
+              <span className="rounded-2xl bg-slate-950 px-5 py-2 text-lg font-black tracking-[0.24em] text-white shadow-lg shadow-slate-900/20">
+                PETTYCASH
+              </span>
+              <span className="text-xs font-medium uppercase tracking-[0.3em] text-muted-foreground">
+                Control Center
+              </span>
             </div>
-          </div>
+            <div>
+              <CardTitle className="text-2xl">Welcome back</CardTitle>
+              <CardDescription>Sign in to your account</CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label>Email Address</Label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your.email@company.com"
+                  required
+                  autoComplete="email"
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Password</Label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    autoComplete="current-password"
+                    disabled={loading}
+                    className="pr-11"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                    aria-label="Toggle password visibility"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
 
-          {/* Error Message */}
-          {error && (
-            <div className="bg-red-50 border border-red-200
-              text-red-700 p-3 rounded-lg text-sm
-              flex items-center gap-2">
-              <span className="text-red-500">⚠</span>
-              {error}
-            </div>
-          )}
+              {error && (
+                <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm font-medium text-rose-700">
+                  {error}
+                </div>
+              )}
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700
-              text-white p-3 rounded-lg font-medium
-              flex items-center justify-center gap-2
-              disabled:opacity-50 disabled:cursor-not-allowed
-              transition-all active:scale-95 shadow-md
-              mt-2"
-          >
-            {loading ? (
-              <>
-                <div className="animate-spin rounded-full
-                  h-5 w-5 border-b-2 border-white" />
-                Signing in...
-              </>
-            ) : (
-              <>
-                <LogIn size={18} />
-                Sign In
-              </>
-            )}
-          </button>
-        </form>
-
-        {/* Footer Note */}
-        <div className="mt-6 text-center">
-          <p className="text-sm text-slate-500">
-            Contact your administrator for account access
-          </p>
-        </div>
-
-        {/* Role Guide */}
-        <div className="mt-6 p-4 bg-slate-50 rounded-lg
-          border border-slate-200">
-          <p className="text-xs font-semibold text-slate-600
-            mb-2 text-center">
-            Role Access Guide
-          </p>
-          <div className="grid grid-cols-2 gap-2 text-xs
-            text-slate-500">
-            <div className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full
-                bg-blue-500 flex-shrink-0" />
-              Admin — Full access
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full
-                bg-emerald-500 flex-shrink-0" />
-              Manager — Approvals
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full
-                bg-amber-500 flex-shrink-0" />
-              Employee — Expenses
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full
-                bg-purple-500 flex-shrink-0" />
-              Accountant — Reports
-            </div>
-          </div>
-        </div>
+              <Button type="submit" disabled={loading} className="w-full gap-2">
+                {loading ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> : <LogIn size={18} />}
+                {loading ? 'Signing in...' : 'Sign In'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
-    </div>
+    </main>
   );
 }

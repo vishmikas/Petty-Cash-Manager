@@ -7,7 +7,6 @@ import React, {
 } from 'react';
 import {
   login as apiLogin,
-  register as apiRegister,
   getCurrentUser
 } from '../services/api';
 
@@ -72,18 +71,6 @@ export const AuthProvider = ({ children }) => {
     return response;
   };
 
-  // REGISTER
-  const register = async (userData) => {
-    const response = await apiRegister(userData);
-    const { token, ...user } = response.data.data;
-
-    localStorage.setItem('token', token);
-    setToken(token);
-    setUser(user);
-
-    return response;
-  };
-
   // UPDATE USER
   const updateUser = (updatedUser) => {
     setUser(updatedUser);
@@ -94,7 +81,6 @@ export const AuthProvider = ({ children }) => {
     token,
     loading,
     login,
-    register,
     logout,
     updateUser,
     isAuthenticated: !!token && !!user

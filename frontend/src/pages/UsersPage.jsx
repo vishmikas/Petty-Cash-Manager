@@ -4,7 +4,7 @@ import {
   getDepartments,
   updateUser,
   deleteUser,
-  register
+  createUser
 } from '../services/api';
 import Navbar from '../components/Navbar';
 import Toast from '../components/Toast';
@@ -202,8 +202,8 @@ export default function UsersPage() {
       setIsSubmitting(true);
 
       if (modal.mode === 'create') {
-        // Register new user
-        await register({
+        // Admin-only user creation. This does not log the admin out.
+        await createUser({
           name: formData.name,
           email: formData.email,
           password: formData.password,
@@ -270,11 +270,10 @@ export default function UsersPage() {
   
   // RENDER
   return (
-    <div className="min-h-screen bg-gradient-to-br
-      from-slate-50 to-slate-100">
+    <div className="app-shell">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto p-4 md:p-8">
+      <div className="page-container">
 
         {/* Header */}
         <header className="flex flex-col md:flex-row
@@ -286,7 +285,7 @@ export default function UsersPage() {
               <Users className="text-blue-600" />
               User Management
             </h1>
-            <p className="text-slate-500 text-sm mt-1">
+            <p className="page-subtitle">
               Create and manage system users
             </p>
           </div>
@@ -373,7 +372,7 @@ export default function UsersPage() {
             </p>
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-lg
+          <div className="glass-card shadow-sm
             border border-slate-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">

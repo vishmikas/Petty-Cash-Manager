@@ -23,7 +23,7 @@ export const APPROVAL_STATUS = {
 export const EXPENSE_CATEGORIES = [
   'Office Supplies',
   'Transportation',
-  'Meals & Entertainment',
+  'Meals',
   'Utilities',
   'Maintenance',
   'Miscellaneous',

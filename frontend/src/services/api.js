@@ -55,6 +55,9 @@ export const login = (email, password) =>
 export const register = (userData) =>
   api.post('/auth/register', userData);
 
+export const createUser = (userData) =>
+  api.post('/users', userData);
+
 export const getCurrentUser = () =>
   api.get('/auth/me');
 
@@ -122,8 +125,8 @@ export const createExpense = (data) =>
 export const updateTransaction = (id, data) =>
   api.put(`/transactions/${id}`, data);
 
-export const approveTransaction = (id) =>
-  api.put(`/transactions/${id}/approve`);
+export const approveTransaction = (id, approvalComment = '') =>
+  api.put(`/transactions/${id}/approve`, { approvalComment });
 
 export const rejectTransaction = (id, reason) =>
   api.put(`/transactions/${id}/reject`, { reason });
