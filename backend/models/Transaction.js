@@ -4,7 +4,7 @@ const { EXPENSE_CATEGORIES } = require('../utils/constants');
 const TransactionSchema = new mongoose.Schema({
   referenceNumber: {
     type: String,
-    unique: true,
+    unique: true,  // this alone creates the index — no need for schema.index()
     sparse: true,
     trim: true
   },
@@ -86,7 +86,8 @@ const TransactionSchema = new mongoose.Schema({
   timestamps: true
 });
 
-TransactionSchema.index({ referenceNumber: 1 });
+// referenceNumber index is already created via `unique: true` in the field definition above.
+// Only add extra compound/query-optimisation indexes here.
 TransactionSchema.index({ date: -1 });
 TransactionSchema.index({ employee: 1 });
 TransactionSchema.index({ department: 1 });

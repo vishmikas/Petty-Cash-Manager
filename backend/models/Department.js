@@ -4,7 +4,7 @@ const DepartmentSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    unique: true,
+    unique: true,  // creates the index — schema.index({ name: 1 }) below is redundant
     trim: true
   },
   description: {
@@ -14,7 +14,7 @@ const DepartmentSchema = new mongoose.Schema({
   manager: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    unique: true,
+    unique: true,  // creates the index — schema.index({ manager: 1 }) below is redundant
     sparse: true
   },
   monthlyBudget: {
@@ -30,7 +30,7 @@ const DepartmentSchema = new mongoose.Schema({
   timestamps: true
 });
 
-DepartmentSchema.index({ name: 1 });
-DepartmentSchema.index({ manager: 1 }, { unique: true, sparse: true });
+// Indexes for name and manager are already created by `unique: true` in the
+// field definitions above. No schema.index() calls needed here.
 
 module.exports = mongoose.model('Department', DepartmentSchema);
