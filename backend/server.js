@@ -23,9 +23,8 @@ if (missingEnvVars.length > 0) {
 const app = express();
 
 /**
- * Required for Render / reverse proxy hosting.
- * Fixes express-rate-limit error:
- * ERR_ERL_UNEXPECTED_X_FORWARDED_FOR
+ * Required for Render reverse proxy.
+ * Fixes express-rate-limit X-Forwarded-For error.
  */
 app.set('trust proxy', 1);
 
@@ -35,6 +34,49 @@ app.use(
     crossOriginEmbedderPolicy: false,
   })
 );
+
+/**
+ * CORS CONFIG
+ * Main frontend:
+ * https://petty-cash-manager-five.vercel.app
+ */
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://petty-cash-manager-five.vercel.app',
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests from Postman, curl, server-to-server, same-origin
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    // Allow exact origins
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    // Allow Vercel preview deployments for this project
+    if (
+      origin.endsWith('.vercel.app') &&
+      origin.includes('petty-cash-manager')
+    ) {
+      return callback(null, true);
+    }
+
+    console.log(`CORS blocked for origin: ${origin}`);
+    return callback(null, false);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+// CORS must be before routes and before rate limiter
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -48,29 +90,6 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 app.use(mongoSanitize());
-
-const allowedOrigins = [
-  'http://localhost:3000',
-  process.env.FRONTEND_URL,
-].filter(Boolean);
-
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow Postman, curl, mobile apps, and same-origin requests with no origin
-      if (!origin) {
-        return callback(null, true);
-      }
-
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      return callback(new Error(`CORS blocked for origin: ${origin}`));
-    },
-    credentials: true,
-  })
-);
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
